@@ -6,6 +6,7 @@ import {
   useQuery,
   useQueries,
 } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 const queryClient = new QueryClient();
 const fetchGitHubUser = async (user: string) => {
   const response = await fetch(`https://api.github.com/users/${user}`);
@@ -84,6 +85,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <GitHubProfiles />
+      <ReactQueryDevtools/>
     </QueryClientProvider>
   );
 }
