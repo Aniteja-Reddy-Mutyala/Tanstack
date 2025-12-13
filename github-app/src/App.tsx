@@ -19,10 +19,20 @@ function GitHubProfiles() {
   const usernames = ["Aniteja-Reddy-Mutyala", "moontahoe"];
   const results = useQueries({
     queries: usernames.map((user) => ({
-      queryKey: ["user", user],
+      queryKey: ["github","user", user],
       queryFn: () => fetchGitHubUser(user),
     })),
   });
+  const refreshAllQueries=()=>{
+    queryClient.invalidateQueries({
+      queryKey:["github","user"]
+    })
+  }
+  const refreshUser=(user:string)=>{
+    queryClient.invalidateQueries({
+      queryKey:["github","user",user]
+    })
+  }
   // console.log(data)
   // if (isLoading){
   //   return <div>Loading!!!!!</div>
@@ -46,7 +56,7 @@ function GitHubProfiles() {
   };
   const logCacheData=()=>{
     const data=queryClient.getQueriesData({
-      queryKey:["user"]
+      queryKey:["github","user"]
     })
     console.log(data)
   }
@@ -58,7 +68,7 @@ function GitHubProfiles() {
   return (
     <>
       <div className="profile-conatiner">
-        
+        <button onClick={refreshAllQueries}>Refresh all</button>
       {results.map((user: any) => {
         if (!user.data) {
           return null;
@@ -69,11 +79,13 @@ function GitHubProfiles() {
             <button onClick={logCacheData}>Log cache data</button>
             <img src={user.data.avatar_url} className="profile-avatar" alt={user.data.login} />
             <h2>{user.data.login}</h2>
+            <p>{user.data.location}</p>
             <button onClick={() => toggleFavourite(user.data.login)}>
               {favourites[user.data.login]
                 ? "*Favourited"
                 : "* add to favourites"}
             </button>
+            <button onClick={()=>refreshUser(user.data.login)}>Refresh user</button>
           </div>
         );
       })}
