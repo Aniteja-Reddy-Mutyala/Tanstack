@@ -5,6 +5,7 @@ import {
   QueryClientProvider,
   useQuery,
   useQueries,
+  useMutation,
 } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 const queryClient = new QueryClient();
@@ -15,24 +16,28 @@ const fetchGitHubUser = async (user: string) => {
   }
   return response.json();
 };
+const saveFavourite = async (data: { user: string; favourites: boolean }) => {
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  return data;
+};
 function GitHubProfiles() {
   const usernames = ["Aniteja-Reddy-Mutyala", "moontahoe"];
   const results = useQueries({
     queries: usernames.map((user) => ({
-      queryKey: ["github","user", user],
+      queryKey: ["github", "user", user],
       queryFn: () => fetchGitHubUser(user),
     })),
   });
-  const refreshAllQueries=()=>{
+  const refreshAllQueries = () => {
     queryClient.invalidateQueries({
-      queryKey:["github","user"]
-    })
-  }
-  const refreshUser=(user:string)=>{
+      queryKey: ["github", "user"],
+    });
+  };
+  const refreshUser = (user: string) => {
     queryClient.invalidateQueries({
-      queryKey:["github","user",user]
-    })
-  }
+      queryKey: ["github", "user", user],
+    });
+  };
   // console.log(data)
   // if (isLoading){
   //   return <div>Loading!!!!!</div>
@@ -48,18 +53,29 @@ function GitHubProfiles() {
   }
   const [favourites, setFavourites] = useState<Favourites>({});
 
+  const favouriteMutation = useMutation({
+    mutationFn: saveFavourite,
+    onSuccess: (data) => {
+      setFavourites((prev) => ({
+        ...prev,
+        [data.user]: data.favourites,
+      }));
+    },
+  });
+
   const toggleFavourite = (user: string): void => {
-    setFavourites((prev) => ({
-      ...prev,
-      [user]: !prev[user],
-    }));
+    favouriteMutation.mutate({
+      user,
+      favourites: !favourites[user],
+    });
   };
-  const logCacheData=()=>{
-    const data=queryClient.getQueriesData({
-      queryKey:["github","user"]
-    })
-    console.log(data)
-  }
+
+  const logCacheData = () => {
+    const data = queryClient.getQueriesData({
+      queryKey: ["github", "user"],
+    });
+    console.log(data);
+  };
   const isLoading = results.some((query) => query.isLoading);
   if (isLoading) {
     return <div>Loading.....</div>;
@@ -69,26 +85,38 @@ function GitHubProfiles() {
     <>
       <div className="profile-conatiner">
         <button onClick={refreshAllQueries}>Refresh all</button>
-      {results.map((user: any) => {
-        if (!user.data) {
-          return null;
-        }
-        return (
-          
-          <div key={user.data.login} className="profile-card">
-            <button onClick={logCacheData}>Log cache data</button>
-            <img src={user.data.avatar_url} className="profile-avatar" alt={user.data.login} />
-            <h2>{user.data.login}</h2>
-            <p>{user.data.location}</p>
-            <button onClick={() => toggleFavourite(user.data.login)}>
-              {favourites[user.data.login]
-                ? "*Favourited"
-                : "* add to favourites"}
-            </button>
-            <button onClick={()=>refreshUser(user.data.login)}>Refresh user</button>
-          </div>
-        );
-      })}
+        {results.map((user: any) => {
+          if (!user.data) {
+            return null;
+          }
+          const userName = user.data.login;
+          const isFavourites = favourites[userName];
+          const isPending =
+            favouriteMutation.isPending &&
+            favouriteMutation?.variables.user === userName;
+          return (
+            <div key={user.data.login} className="profile-card">
+              <button onClick={logCacheData}>Log cache data</button>
+              <img
+                src={user.data.avatar_url}
+                className="profile-avatar"
+                alt={user.data.login}
+              />
+              <h2>{user.data.login}</h2>
+              <p>{user.data.location}</p>
+              <button onClick={() => toggleFavourite(user.data.login)}>
+                {isPending
+                  ? "...Saving"
+                  : isFavourites
+                  ? "*Favourited"
+                  : "* add to favourites"}
+              </button>
+              <button onClick={() => refreshUser(user.data.login)}>
+                Refresh user
+              </button>
+            </div>
+          );
+        })}
       </div>
     </>
   );
@@ -97,7 +125,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <GitHubProfiles />
-      <ReactQueryDevtools/>
+      <ReactQueryDevtools />
     </QueryClientProvider>
   );
 }
