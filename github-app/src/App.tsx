@@ -28,10 +28,22 @@ function GitHubProfiles(){
   // if(isError){
   //   return <div>Error!!!!</div>
   // }
+  // setTimeout(()=>{
+  //   console.log("")
+  // },500000000);
+  const isLoading=results.some(query=>query.isLoading)
+  if (isLoading){
+    return <div>Loading.....</div>
+  }
+  
   return (
     <>
   <div >Github profile component</div>
-   {JSON.stringify(results)}
+   {results.map((user:any)=>(
+    <div key={user.data.login}>{user.data.login}
+    <img src={user.data.avatar_url} alt={user.data.login}/>
+    </div>
+   ))}
    
   </>
   )
