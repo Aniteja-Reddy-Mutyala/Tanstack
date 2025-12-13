@@ -43,6 +43,12 @@ function GitHubProfiles() {
       [user]: !prev[user],
     }));
   };
+  const logCacheData=()=>{
+    const data=queryClient.getQueriesData({
+      queryKey:["user"]
+    })
+    console.log(data)
+  }
   const isLoading = results.some((query) => query.isLoading);
   if (isLoading) {
     return <div>Loading.....</div>;
@@ -59,6 +65,7 @@ function GitHubProfiles() {
         return (
           
           <div key={user.data.login} className="profile-card">
+            <button onClick={logCacheData}>Log cache data</button>
             <img src={user.data.avatar_url} className="profile-avatar" alt={user.data.login} />
             <h2>{user.data.login}</h2>
             <button onClick={() => toggleFavourite(user.data.login)}>
