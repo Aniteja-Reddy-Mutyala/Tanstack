@@ -18,6 +18,9 @@ const fetchGitHubUser = async (user: string) => {
 };
 const saveFavourite = async (data: { user: string; favourites: boolean }) => {
   await new Promise((resolve) => setTimeout(resolve, 500));
+  if(Math.random()<.5){
+    throw new Error("Unable to save");
+  }
   return data;
 };
 function GitHubProfiles() {
@@ -51,16 +54,22 @@ function GitHubProfiles() {
   interface Favourites {
     [username: string]: boolean;
   }
+  const[error,SetError]=useState<string|null>(null);
   const [favourites, setFavourites] = useState<Favourites>({});
 
   const favouriteMutation = useMutation({
     mutationFn: saveFavourite,
     onSuccess: (data) => {
+      SetError(null);
       setFavourites((prev) => ({
         ...prev,
         [data.user]: data.favourites,
-      }));
+      }))
     },
+    onError:(error:Error)=>{
+      SetError(`Error:${error.message}`);
+      console.error(error);
+    }
   });
 
   const toggleFavourite = (user: string): void => {
@@ -85,6 +94,7 @@ function GitHubProfiles() {
     <>
       <div className="profile-conatiner">
         <button onClick={refreshAllQueries}>Refresh all</button>
+        <div>{error}</div>
         {results.map((user: any) => {
           if (!user.data) {
             return null;
