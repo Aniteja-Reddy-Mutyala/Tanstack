@@ -9,7 +9,13 @@ import {
 } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions:{
+    queries:{
+      staleTime:30*1000
+    }
+  }
+});
 
 const fetchGitHubUser = async (username: string) => {
   const response = await fetch(
@@ -45,7 +51,8 @@ function GitHubProfiles() {
   const results = useQueries({
     queries: usernames.map((username) => ({
       queryKey: ["github", "user", username],
-      queryFn: () => fetchGitHubUser(username)
+      queryFn: () => fetchGitHubUser(username),
+      staleTime:30*1000
     }))
   });
 
